@@ -9,6 +9,7 @@ import java.util.*;
  * Created by LENOVO on 2014/11/25.
  */
 class GongjiaoService {
+    //all shit
     private List<Record> records = new ArrayList<Record>();
     private List<Through> throughs = new ArrayList<Through>();
 
