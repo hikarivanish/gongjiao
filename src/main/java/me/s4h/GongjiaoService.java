@@ -1,5 +1,7 @@
 package me.s4h;
 
+import org.omg.CORBA.INTERNAL;
+
 import java.io.InputStream;
 import java.util.*;
 
@@ -13,14 +15,21 @@ class GongjiaoService {
     private Map<Integer, Set<String>> lineNamesByStopId = new HashMap<Integer, Set<String>>();
 
     private Map<String, Integer> stopIdByStopName = new HashMap<String, Integer>();
-
+    private Map<Integer, String> stopNameByStopId = new HashMap<Integer, String>();
 
     private Map<String, Map<Integer, Map<Integer, Route.PartLine.Stop>>> lines =
             new HashMap<String, Map<Integer, Map<Integer, Route.PartLine.Stop>>>();
 
 
-    public Integer getStopIdByStopName(String stopName) {
-        return stopIdByStopName.get(stopName);
+    public Map<Integer, String> getStopIdByStopName(String stopName) {
+        Map<Integer, String> stops = new HashMap<Integer, String>();
+        for (Integer stopId : stopNameByStopId.keySet()) {
+            if (stopNameByStopId.get(stopId).equals(stopName)) {
+                stops.put(stopId, stopName);
+            }
+        }
+
+        return stops;
     }
 
     public Map<Integer, Map<Integer, Route.PartLine.Stop>> getLine(String lineName) {
@@ -55,12 +64,15 @@ class GongjiaoService {
                     Route route = new Route();
                     route.totalDistance = t.distance;
                     Route.PartLine partLine = new Route.PartLine(t.lineId, t.lineName, t.lineDirection, t.distance);
-                    for (Record r : records) {
-                        if (r.lineId == t.lineId && t.lineDirection == r.lineDirection
-                                && r.lineStopIndex >= t.stopAIndex && r.lineStopIndex <= t.stopBIndex) {
-                            partLine.stops.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
+
+                    Map<Integer, Route.PartLine.Stop> stops = lines.get(t.lineName).get(t.lineDirection);
+                    for (Integer index : stops.keySet()) {
+                        if (t.stopAIndex <= index && index <= t.stopBIndex) {
+                            Route.PartLine.Stop stop = stops.get(index);
+                            partLine.stops.add(new Route.PartLine.Stop(stop.stopId, stop.stopName, index));
                         }
                     }
+
                     route.partLines.add(partLine);
                     routes.add(route);
                 } else { //but not to B
@@ -88,16 +100,23 @@ class GongjiaoService {
                     Route route = new Route();
                     route.totalDistance = t1.distance + t2.distance;
                     Route.PartLine partLine1 = new Route.PartLine(t1.lineId, t1.lineName, t1.lineDirection, t1.distance);
+
+                    Map<Integer, Route.PartLine.Stop> stops1 = lines.get(t1.lineName).get(t1.lineDirection);
+                    for (Integer index : stops1.keySet()) {
+                        if (t1.stopAIndex <= index && index <= t1.stopBIndex) {
+                            Route.PartLine.Stop stop = stops1.get(index);
+                            partLine1.stops.add(new Route.PartLine.Stop(stop.stopId, stop.stopName, index));
+                        }
+                    }
+
+
                     Route.PartLine partLine2 = new Route.PartLine(t2.lineId, t2.lineName, t2.lineDirection, t2.distance);
 
-                    for (Record r : records) {
-                        if (r.lineId == t1.lineId && r.lineDirection == t1.lineDirection
-                                && r.lineStopIndex >= t1.stopAIndex && r.lineStopIndex <= t1.stopBIndex) {
-                            partLine1.stops.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
-
-                        } else if (r.lineId == t2.lineId && r.lineDirection == t2.lineDirection
-                                && r.lineStopIndex >= t2.stopAIndex && r.lineStopIndex <= t2.stopBIndex) {
-                            partLine2.stops.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
+                    Map<Integer, Route.PartLine.Stop> stops2 = lines.get(t2.lineName).get(t2.lineDirection);
+                    for (Integer index : stops2.keySet()) {
+                        if (t2.stopAIndex <= index && index <= t2.stopBIndex) {
+                            Route.PartLine.Stop stop = stops2.get(index);
+                            partLine2.stops.add(new Route.PartLine.Stop(stop.stopId, stop.stopName, index));
                         }
                     }
 
@@ -111,21 +130,34 @@ class GongjiaoService {
                             Route route = new Route();
                             route.totalDistance = t1.distance + t2.distance + t3.distance;
                             Route.PartLine partLine1 = new Route.PartLine(t1.lineId, t1.lineName, t1.lineDirection, t1.distance);
-                            Route.PartLine partLine2 = new Route.PartLine(t2.lineId, t2.lineName, t2.lineDirection, t2.distance);
-                            Route.PartLine partLine3 = new Route.PartLine(t3.lineId, t3.lineName, t3.lineDirection, t3.distance);
-                            for (Record r : records) {
-                                if (r.lineId == t1.lineId && r.lineDirection == t1.lineDirection
-                                        && r.lineStopIndex >= t1.stopAIndex && r.lineStopIndex <= t1.stopBIndex) {
-                                    partLine1.stops.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
 
-                                } else if (r.lineId == t2.lineId && r.lineDirection == t2.lineDirection
-                                        && r.lineStopIndex >= t2.stopAIndex && r.lineStopIndex <= t2.stopBIndex) {
-                                    partLine2.stops.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
-                                } else if (r.lineId == t3.lineId && r.lineDirection == t3.lineDirection
-                                        && r.lineStopIndex >= t3.stopAIndex && r.lineStopIndex <= t3.stopBIndex) {
-                                    partLine3.stops.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
+                            Map<Integer, Route.PartLine.Stop> stops1 = lines.get(t1.lineName).get(t1.lineDirection);
+                            for (Integer index : stops1.keySet()) {
+                                if (t1.stopAIndex <= index && index <= t1.stopBIndex) {
+                                    Route.PartLine.Stop stop = stops1.get(index);
+                                    partLine1.stops.add(new Route.PartLine.Stop(stop.stopId, stop.stopName, index));
                                 }
                             }
+
+                            Route.PartLine partLine2 = new Route.PartLine(t2.lineId, t2.lineName, t2.lineDirection, t2.distance);
+
+                            Map<Integer, Route.PartLine.Stop> stops2 = lines.get(t2.lineName).get(t2.lineDirection);
+                            for (Integer index : stops2.keySet()) {
+                                if (t2.stopAIndex <= index && index <= t2.stopBIndex) {
+                                    Route.PartLine.Stop stop = stops2.get(index);
+                                    partLine2.stops.add(new Route.PartLine.Stop(stop.stopId, stop.stopName, index));
+                                }
+                            }
+
+                            Route.PartLine partLine3 = new Route.PartLine(t3.lineId, t3.lineName, t3.lineDirection, t3.distance);
+                            Map<Integer, Route.PartLine.Stop> stops3 = lines.get(t3.lineName).get(t3.lineDirection);
+                            for (Integer index : stops3.keySet()) {
+                                if (t3.stopAIndex <= index && index <= t3.stopBIndex) {
+                                    Route.PartLine.Stop stop = stops3.get(index);
+                                    partLine3.stops.add(new Route.PartLine.Stop(stop.stopId, stop.stopName, index));
+                                }
+                            }
+
 
                             route.partLines.add(partLine1);
                             route.partLines.add(partLine3);
@@ -176,16 +208,16 @@ class GongjiaoService {
                 Map<Integer, Map<Integer, Route.PartLine.Stop>> diLines = lines.get(r.lineName);
                 if (diLines.containsKey(r.lineDirection)) {
                     Map<Integer, Route.PartLine.Stop> stopMap = diLines.get(r.lineDirection);
-                    stopMap.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
+                    stopMap.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName, r.lineStopIndex));
                 } else {
                     Map<Integer, Route.PartLine.Stop> stopMap = new HashMap<Integer, Route.PartLine.Stop>();
-                    stopMap.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
+                    stopMap.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName, r.lineStopIndex));
                     diLines.put(r.lineDirection, stopMap);
                 }
             } else {
                 Map<Integer, Map<Integer, Route.PartLine.Stop>> diLines = new HashMap<Integer, Map<Integer, Route.PartLine.Stop>>();
                 Map<Integer, Route.PartLine.Stop> stopMap = new HashMap<Integer, Route.PartLine.Stop>();
-                stopMap.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName));
+                stopMap.put(r.lineStopIndex, new Route.PartLine.Stop(r.stopId, r.stopName, r.lineStopIndex));
                 diLines.put(r.lineDirection, stopMap);
                 lines.put(r.lineName, diLines);
             }
@@ -207,6 +239,9 @@ class GongjiaoService {
             stopIdByStopName.put(r.stopName, r.stopId);
         }
 
+        for (Record r : records) {
+            stopNameByStopId.put(r.stopId, r.stopName);
+        }
 
         System.out.println("generate finish");
     }
@@ -222,7 +257,7 @@ class GongjiaoService {
             public String lineName;
             public int lineDirection;
             public int distance;
-            public Map<Integer, Stop> stops = new HashMap<Integer, Stop>();
+            public List<Stop> stops = new ArrayList<Stop>();
 
             public PartLine(int lineId, String lineName, int lineDirection, int distance) {
                 this.lineId = lineId;
@@ -235,9 +270,11 @@ class GongjiaoService {
                 public int stopId;
                 public String stopName;
                 public int stopIndex;
-                public Stop(int stopId, String stopName) {
+
+                public Stop(int stopId, String stopName, int stopIndex) {
                     this.stopId = stopId;
                     this.stopName = stopName;
+                    this.stopIndex = stopIndex;
                 }
             }
         }
