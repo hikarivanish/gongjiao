@@ -93,7 +93,6 @@ public class Main {
         }
     }
 
-
     public static void lineQuery() {
         while (true) {
             System.out.println("input lineName( -1 for return ):");
