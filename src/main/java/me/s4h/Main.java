@@ -84,9 +84,13 @@ public class Main {
                 return;
             } else {
                 Set<String> lines = service.getLinesByStopName(stopName);
-                System.out.println("lines for " + stopName);
-                for (String line : lines) {
-                    System.out.print(line + "\t");
+                if (lines == null) {
+                    System.out.println("no match for " + stopName);
+                } else {
+                    System.out.println("lines for " + stopName);
+                    for (String line : lines) {
+                        System.out.print(line + "\t");
+                    }
                 }
                 System.out.println();
             }
