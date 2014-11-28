@@ -13,33 +13,34 @@ class GongjiaoService {
     private List<Record> records = new ArrayList<Record>();
     private List<Through> throughs = new ArrayList<Through>();
 
-    private Map<Integer, Set<String>> lineNamesByStopId = new HashMap<Integer, Set<String>>();
+    //    private Map<Integer, Set<String>> lineNamesByStopId = new HashMap<Integer, Set<String>>();
+    private Map<String, Set<String>> lineNamesByStopName = new HashMap<String, Set<String>>();
 
-    private Map<String, Integer> stopIdByStopName = new HashMap<String, Integer>();
+    //    private Map<String, Integer> stopIdByStopName = new HashMap<String, Integer>();
     private Map<Integer, String> stopNameByStopId = new HashMap<Integer, String>();
 
     private Map<String, Map<Integer, Map<Integer, Route.PartLine.Stop>>> lines =
             new HashMap<String, Map<Integer, Map<Integer, Route.PartLine.Stop>>>();
 
 
-    public Map<Integer, String> getStopIdByStopName(String stopName) {
-        Map<Integer, String> stops = new HashMap<Integer, String>();
-        for (Integer stopId : stopNameByStopId.keySet()) {
-            if (stopNameByStopId.get(stopId).equals(stopName)) {
-                stops.put(stopId, stopName);
-            }
-        }
-
-        return stops;
-    }
+//    public Map<Integer, String> getStopIdByStopName(String stopName) {
+//        Map<Integer, String> stops = new HashMap<Integer, String>();
+//        for (Integer stopId : stopNameByStopId.keySet()) {
+//            if (stopNameByStopId.get(stopId).equals(stopName)) {
+//                stops.put(stopId, stopName);
+//            }
+//        }
+//
+//        return stops;
+//    }
 
     public Map<Integer, Map<Integer, Route.PartLine.Stop>> getLine(String lineName) {
         return lines.get(lineName);
     }
 
 
-    public Set<String> getLinesByStopId(int stopId) {
-        return lineNamesByStopId.get(stopId);
+    public Set<String> getLinesByStopName(String  stopName) {
+        return lineNamesByStopName.get(stopName);
     }
 
 
@@ -53,15 +54,15 @@ class GongjiaoService {
         return routes.subList(0, 8 > routes.size() ? routes.size() : 8);
     }
 
-    public List<Route> findRoute(int stopAId, int stopBId) {
+    public List<Route> findRoute(String stopAName, String stopBName) {
         List<Route> routes = new ArrayList<Route>();
 
         List<Through> throughFromA = new ArrayList<Through>();
         List<Through> throughToB = new ArrayList<Through>();
         List<Through> throughOther = new ArrayList<Through>();
         for (Through t : throughs) {
-            if (t.stopAId == stopAId) { //from A
-                if (t.stopBId == stopBId) { // and to B
+            if (t.stopAName.equals(stopAName)) { //from A
+                if (t.stopBName.equals(stopBName)) { // and to B
                     Route route = new Route();
                     route.totalDistance = t.distance;
                     Route.PartLine partLine = new Route.PartLine(t.lineId, t.lineName, t.lineDirection, t.distance);
@@ -80,7 +81,7 @@ class GongjiaoService {
                     throughFromA.add(t);
                 }
             } else { //not from A
-                if (t.stopBId == stopBId) { //but to B
+                if (t.stopBName.equals(stopBName)) { //but to B
                     throughToB.add(t);
                 } else { //
                     throughOther.add(t);
@@ -95,7 +96,7 @@ class GongjiaoService {
         List<Route> routesThirdPlann = new ArrayList<Route>();
         for (Through t1 : throughFromA) {
             for (Through t2 : throughToB) {
-                if (t1.stopBId == t2.stopAId) {
+                if (t1.stopBName.equals(t2.stopAName)) {
                     secondPlanFound = true;
 
                     Route route = new Route();
@@ -127,7 +128,7 @@ class GongjiaoService {
 
                 } else if (!secondPlanFound) {
                     for (Through t3 : throughOther) {
-                        if (t3.stopAId == t1.stopBId && t3.stopBId == t2.stopAId) {
+                        if (t3.stopAName.equals(t1.stopBName) && t3.stopBName.equals(t2.stopAName)) {
                             Route route = new Route();
                             route.totalDistance = t1.distance + t2.distance + t3.distance;
                             Route.PartLine partLine1 = new Route.PartLine(t1.lineId, t1.lineName, t1.lineDirection, t1.distance);
@@ -226,22 +227,13 @@ class GongjiaoService {
 
 
         for (Record r : records) {
-            if (lineNamesByStopId.containsKey(r.stopId)) {
-                lineNamesByStopId.get(r.stopId).add(r.lineName);
+            if (lineNamesByStopName.containsKey(r.stopName)) {
+                lineNamesByStopName.get(r.stopName).add(r.lineName);
             } else {
                 HashSet<String> lines = new HashSet<String>();
                 lines.add(r.lineName);
-                lineNamesByStopId.put(r.stopId, lines);
+                lineNamesByStopName.put(r.stopName, lines);
             }
-        }
-
-
-        for (Record r : records) {
-            stopIdByStopName.put(r.stopName, r.stopId);
-        }
-
-        for (Record r : records) {
-            stopNameByStopId.put(r.stopId, r.stopName);
         }
 
         System.out.println("generate finish");

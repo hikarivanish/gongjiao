@@ -56,41 +56,21 @@ public class Main {
             if ("-1".equals(stopAName)) {
                 return;
             } else {
-                Map<Integer, String> stopA = service.getStopIdByStopName(stopAName);
-                if (stopA.size() == 0) {
-                    System.out.println("no match for " + stopAName);
-                } else {
-                    System.out.println("select id for " + stopAName);
-                    for (Integer stopId : stopA.keySet()) {
-                        System.out.println(stopId + " :" + stopAName);
-                    }
-                    int stopAId = sc.nextInt();
-                    System.out.println("input stopB name");
-                    String stopBName = sc.next();
-                    Map<Integer, String> stopBs = service.getStopIdByStopName(stopBName);
-                    if (stopBs.size() == 0) {
-                        System.out.println("no match for " + stopBName);
-                    } else {
-                        System.out.println("select id for " + stopBName);
-                        for (Integer stopId : stopBs.keySet()) {
-                            System.out.println(stopId + " :" + stopBName);
+                System.out.println("input stopB name");
+                String stopBName = sc.next();
+                List<GongjiaoService.Route> routes = service.findRoute(stopAName, stopBName);
+                System.out.println("found " + routes.size() + " routes");
+                for (int i = 0; i < routes.size(); i++) {
+                    GongjiaoService.Route route = routes.get(i);
+                    System.out.println("route " + (i + 1) + " (stops:" + route.totalDistance + "):");
+                    for (GongjiaoService.Route.PartLine partLine : route.partLines) {
+                        System.out.print(partLine.lineName + ":");
+                        for (int j = 0; j < partLine.stops.size(); j++) {
+                            System.out.print(partLine.stops.get(j).stopName + (j == partLine.stops.size() - 1 ? "" : " -> "));
                         }
-                        int stopBId = sc.nextInt();
-                        List<GongjiaoService.Route> routes = service.findRoute(stopAId, stopBId);
-                        System.out.println("found " + routes.size() + " routes");
-                        for (int i = 0; i < routes.size(); i++) {
-                            GongjiaoService.Route route = routes.get(i);
-                            System.out.println("route " + (i + 1) + " (stops:" + route.totalDistance + "):");
-                            for (GongjiaoService.Route.PartLine partLine : route.partLines) {
-                                System.out.print(partLine.lineName + ":");
-                                for (int j = 0; j < partLine.stops.size(); j++) {
-                                    System.out.print(partLine.stops.get(j).stopName + (j == partLine.stops.size() - 1 ? "" : " -> "));
-                                }
-                                System.out.println();
-                            }
-                            System.out.println();
-                        }
+                        System.out.println();
                     }
+                    System.out.println();
                 }
             }
         }
@@ -103,22 +83,12 @@ public class Main {
             if ("-1".equals(stopName)) {
                 return;
             } else {
-                Map<Integer, String> stops = service.getStopIdByStopName(stopName);
-                if (stops.size() == 0) {
-                    System.out.println("no match");
-                } else {
-                    System.out.println("select id");
-                    for (Integer stopId : stops.keySet()) {
-                        System.out.println(stopId + " :" + stopName);
-                    }
-                    int stopId = sc.nextInt();
-                    Set<String> lines = service.getLinesByStopId(stopId);
-                    System.out.println("lines for " + stopName);
-                    for (String line : lines) {
-                        System.out.print(line + "\t");
-                    }
-                    System.out.println();
+                Set<String> lines = service.getLinesByStopName(stopName);
+                System.out.println("lines for " + stopName);
+                for (String line : lines) {
+                    System.out.print(line + "\t");
                 }
+                System.out.println();
             }
         }
     }
